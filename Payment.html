@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('kwazi.jpeg');  
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            width: 400px;
+            max-width: 90%;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        form {
+            margin-top: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url('arrow-down.png');
+            background-position: right center;
+            background-repeat: no-repeat;
+            padding-right: 25px;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            background-color: #eb2598;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            transition: background-color 0.3s ease;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #ff4785;
+        }
+
+        #slip {
+            display: none;
+            margin-top: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            color: #333;
+        }
+
+        #slip h2 {
+            margin-top: 0;
+            color: #333;
+            text-align: center;
+        }
+
+        #slip p {
+            margin: 5px 0;
+        }
+
+        #slip span {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Payment Details</h2>
+        <form id="paymentForm" onsubmit="processPayment(event)">
+            <label for="fullName">Full Name</label>
+            <input type="text" id="fullName" name="fullName" required>
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required>
+            <label for="deliveryOrCollect">Delivery or Collect</label>
+            <select id="deliveryOrCollect" name="deliveryOrCollect" onchange="toggleDeliveryAddress(); updateAmountToPay();" required>
+                <option value="">Choose...</option>
+                <option value="delivery">Delivery</option>
+                <option value="collect">Collect</option>
+            </select>
+            <div id="deliveryAddress">
+                <label for="deliveryAddress">Delivery Address</label>
+                <textarea id="deliveryAddressText" name="deliveryAddressText"></textarea>
+            </div>
+            <label for="paymentMethod">Payment Method</label>
+            <select id="paymentMethod" name="paymentMethod" onchange="toggleCardDetails(); updateAmountToPay();" required>
+                <option value="">Select Payment Method</option>
+                <option value="cash">Cash on Delivery</option>
+                <option value="paypal">PayPal</option>
+                <option value="credit">Credit Card</option>
+                <option value="debit">Debit Card</option>
+            </select>
+            <div id="cardDetails">
+                <label for="cardNumber">Card Number</label>
+                <input type="text" id="cardNumber" name="cardNumber" pattern="[0-9]{16}" title="Please enter a valid 16-digit card number">
+                <label for="expirationDate">Expiration Date</label>
+                <input type="text" id="expirationDate" name="expirationDate" placeholder="MM/YYYY" pattern="(0[1-9]|1[0-2])\/[0-9]{4}" title="Please enter a valid expiration date in MM/YYYY format">
+                <label for="cvv">CVV</label>
+                <input type="text" id="cvv" name="cvv" pattern="[0-9]{3}" title="Please enter a valid 3-digit CVV">
+            </div>
+            <label id="amountToPayLabel" for="amountToPay">Amount to Pay:</label>
+            <span id="amountToPay"></span>
+            <button type="submit" id="submitBtn">Submit Payment</button>
+        </form>
+        <div id="slip">
+            <h2>Payment Receipt</h2>
+            <p>Full Name: <span id="slipFullName"></span></p>
+            <p>Email: <span id="slipEmail"></span></p>
+            <p id="slipDeliveryOrCollect"></p>
+            <p id="slipDeliveryAddress"></p>
+            <p>Payment Method: <span id="slipPaymentMethod"></span></p>
+            <p>Price Amount: <span id="slipPriceAmount"></span></p>
+            <p>Delivery Fee: <span id="slipDeliveryFee"></span></p>
+            <p>Amount Paid: <span id="slipAmountPaid"></span></p>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            updateAmountToPay();
+        }
+
+        function updateAmountToPay() {
+            const totalPrice = parseFloat(localStorage.getItem('totalPrice')) || 0;
+            let deliveryFee = 0;
+            const deliveryOrCollect = document.getElementById('deliveryOrCollect').value;
+
+            // Adjust delivery fee based on delivery or collect
+            if (deliveryOrCollect === 'delivery') {
+                deliveryFee = 5; // Assuming delivery fee is R5
+            }
+
+            const amountToPay = totalPrice + deliveryFee;
+            document.getElementById("amountToPay").textContent = "R" + amountToPay.toFixed(2);
+        }
+
+        function processPayment(event) {
+            event.preventDefault();
+
+            const fullName = document.getElementById('fullName').value;
+            const email = document.getElementById('email').value;
+            const deliveryOrCollect = document.getElementById('deliveryOrCollect').value;
+            const deliveryAddress = document.getElementById('deliveryAddressText').value;
+            const paymentMethod = document.getElementById('paymentMethod').value;
+            const priceAmount = parseFloat(localStorage.getItem('totalPrice')) || 0;
+            let deliveryFee = 0;
+
+            // Adjust delivery fee based on delivery or collect
+            if (deliveryOrCollect === 'delivery') {
+                deliveryFee = 5; // Assuming delivery fee is R5
+            }
+
+            const amountToPay = priceAmount + deliveryFee;
+
+            if (amountToPay <= 0) {
+                alert("There are no items to pay for.");
+                return;
+            }
+
+            if (deliveryOrCollect === 'delivery' && !deliveryAddress.trim()) {
+                alert("Please enter delivery address.");
+                return;
+            }
+
+            const slipFullName = document.getElementById('slipFullName');
+            const slipEmail = document.getElementById('slipEmail');
+            const slipDeliveryOrCollect = document.getElementById('slipDeliveryOrCollect');
+            const slipDeliveryAddress = document.getElementById('slipDeliveryAddress');
+            const slipPaymentMethod = document.getElementById('slipPaymentMethod');
+            const slipPriceAmount = document.getElementById('slipPriceAmount');
+            const slipDeliveryFee = document.getElementById('slipDeliveryFee');
+            const slipAmountPaid = document.getElementById('slipAmountPaid');
+
+            slipFullName.textContent = fullName;
+            slipEmail.textContent = email;
+            slipDeliveryOrCollect.textContent = deliveryOrCollect === 'delivery' ? 'Delivery' : 'Collect';
+            slipDeliveryAddress.textContent = deliveryOrCollect === 'delivery' ? `Delivery Address: ${deliveryAddress}` : 'Pickup';
+            slipPaymentMethod.textContent = paymentMethod;
+            slipPriceAmount.textContent = `R${priceAmount.toFixed(2)}`;
+            slipDeliveryFee.textContent = `R${deliveryFee.toFixed(2)}`;
+            slipAmountPaid.textContent = `R${amountToPay.toFixed(2)}`;
+
+            document.getElementById('slip').style.display = 'block';
+            // Payment successful message
+            alert("Payment Successful");
+            // Redirecting to index.html after payment
+            setTimeout(function(){
+                window.location.href = "index.html";
+            }, 5000); // Redirecting after 5 seconds
+        }
+
+        function toggleCardDetails() {
+            const paymentMethod = document.getElementById("paymentMethod").value;
+            const cardDetails = document.getElementById("cardDetails");
+            cardDetails.style.display = (paymentMethod === 'credit' || paymentMethod === 'debit') ? "block" : "none";
+        }
+
+        function toggleDeliveryAddress() {
+            const deliveryOrCollect = document.getElementById("deliveryOrCollect").value;
+            const deliveryAddress = document.getElementById("deliveryAddress");
+            deliveryAddress.style.display = (deliveryOrCollect === 'delivery') ? "block" : "none";
+        }
+
+        document.getElementById("submitBtn").disabled = true; // Disable the submit button initially
+
+        // Enable the submit button when all required fields are filled
+        document.addEventListener("input", function() {
+            const fullName = document.getElementById('fullName').value;
+            const email = document.getElementById('email').value;
+            const deliveryOrCollect = document.getElementById('deliveryOrCollect').value;
+            const deliveryAddress = document.getElementById('deliveryAddressText').value;
+            const paymentMethod = document.getElementById('paymentMethod').value;
+
+            const submitBtn = document.getElementById("submitBtn");
+
+            if (fullName.trim() !== "" && email.trim() !== "" && (deliveryOrCollect === 'collect' || (deliveryOrCollect === 'delivery' && deliveryAddress.trim() !== "")) && paymentMethod !== "") {
+                submitBtn.disabled = false;
+            } else {
+                submitBtn.disabled = true;
+            }
+        });
+    </script>
+</body>
+</html>

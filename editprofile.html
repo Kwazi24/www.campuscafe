@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        .update-profile-btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        .update-profile-btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Edit Profile</h2>
+        <form id="editProfileForm">
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">New Password:</label>
+                <input type="password" id="password" name="password">
+            </div>
+            <div class="form-group">
+                <label for="confirm_password">Confirm New Password:</label>
+                <input type="password" id="confirm_password" name="confirm_password">
+            </div>
+            <button type="submit" class="update-profile-btn">Update Profile</button>
+        </form>
+    </div>
+
+    <script>
+        // Retrieve user data from local storage
+        var userData = JSON.parse(localStorage.getItem("userData"));
+
+        // Populate edit profile form with user data
+        if (userData) {
+            document.getElementById("username").value = userData.username;
+            document.getElementById("email").value = userData.email;
+        }
+
+        // Handle form submission
+        document.getElementById("editProfileForm").addEventListener("submit", function(event) {
+            event.preventDefault(); // Prevent form submission
+
+            // Retrieve updated profile information
+            var updatedUsername = document.getElementById("username").value;
+            var updatedEmail = document.getElementById("email").value;
+            var newPassword = document.getElementById("password").value;
+            var confirmNewPassword = document.getElementById("confirm_password").value;
+
+            // Update user data if validation passes
+            if (validateForm(updatedUsername, updatedEmail, newPassword, confirmNewPassword)) {
+                userData.username = updatedUsername;
+                userData.email = updatedEmail;
+                // Update password if provided
+                if (newPassword !== "") {
+                    userData.password = newPassword;
+                }
+                // Save updated user data to local storage
+                localStorage.setItem("userData", JSON.stringify(userData));
+                alert("Profile updated successfully.");
+            
+            }
+        });
+
+        // Form validation function
+        function validateForm(username, email, newPassword, confirmNewPassword) {
+            // Implement your validation logic here
+            // For simplicity, you can add basic checks like empty fields and password match
+            if (username.trim() === "") {
+                alert("Username cannot be empty.");
+                return false;
+            }
+            if (email.trim() === "") {
+                alert("Email cannot be empty.");
+                return false;
+            }
+            if (newPassword !== confirmNewPassword) {
+                alert("Passwords do not match.");
+                return false;
+            }
+            return true;
+        }
+    </script>
+</body>
+</html>

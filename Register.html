@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration</title>
+    <style>
+        /* CSS styles for the registration form */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #5cb8c9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(90, 175, 201, 0.1);
+            text-align: center;
+            width: 400px;
+            max-width: 100%;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        input[type="submit"] {
+            width: 100%;
+            padding: 12px;
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.3s ease;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 14px;
+            margin-top: -10px;
+            margin-bottom: 10px;
+            text-align: left;
+            display: none; /* Hide error messages by default */
+        }
+
+        .error-message.active {
+            display: block; /* Display error messages when active */
+        }
+
+        .loading-spinner {
+            display: none;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #333;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .strength-meter {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .strength-meter .bar {
+            height: 10px;
+            background-color: #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+
+        .strength-meter .bar .progress {
+            height: 100%;
+            width: 0;
+            background-color: #4caf50;
+        }
+
+        .strength-meter .label {
+            font-size: 12px;
+            color: #333;
+        }
+
+        /* Style for back link */
+        .back-link {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            font-size: 18px;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .back-link:hover {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+    </style>
+</head>
+<body>
+     <!-- Back link -->
+     <a href="index.html" class="back-link">Back</a>
+
+    <div class="container">
+        <h2>Create an Account</h2>
+        <form id="registrationForm">
+            <input type="text" id="username" name="username" placeholder="Username (5-10 characters)" required>
+            <br>
+            <span class="error-message" id="usernameError"></span>
+
+            <input type="email" id="email" name="email" placeholder="Email (username@gmail.com)" required>
+            <br>
+            <span class="error-message" id="emailError"></span>
+
+            <input type="password" id="password" name="password" placeholder="Password (8-15 characters)" required>
+            <div class="strength-meter">
+                <div class="bar">
+                    <div class="progress"></div>
+                </div>
+                <div class="label">Password Strength</div>
+            </div>
+            <span class="error-message" id="passwordError"></span>
+
+            <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm Password" required>
+            <br>
+            <span class="error-message" id="confirmPasswordError"></span>
+
+            <input type="submit" value="Register">
+            <div class="loading-spinner" id="loadingSpinner"></div>
+        </form>
+        <div class="login-link">
+            Already have an account? <a href="Login.html">Login here</a>.
+        </div>
+    </div>
+
+    <script>
+        var minUsernameLength = 5; // Minimum length for username
+        var maxUsernameLength = 10; // Maximum length for username
+        var minLength = 8; // Minimum length for password
+        var maxLength = 15; // Maximum length for password
+
+        var usernameInput = document.getElementById("username");
+        var passwordInput = document.getElementById("password");
+        var emailInput = document.getElementById("email");
+
+        // Username input event listener
+        usernameInput.addEventListener("keyup", function() {
+            var username = usernameInput.value;
+            var usernameError = document.getElementById("usernameError");
+            
+            usernameError.textContent = ""; // Reset previous error message
+            
+            if (username.length < minUsernameLength || username.length > maxUsernameLength) {
+                usernameError.textContent = "Username must be between " + minUsernameLength + " and " + maxUsernameLength + " characters long";
+                usernameError.classList.add("active"); // Show error message
+            } else {
+                usernameError.classList.remove("active"); // Hide error message if username length is valid
+            }
+        });
+
+        // Email input event listener
+        emailInput.addEventListener("keyup", function() {
+            var email = emailInput.value;
+            var emailError = document.getElementById("emailError");
+            
+            emailError.textContent = ""; // Reset previous error message
+            
+            var emailPattern = /^[^\s@]+@gmail\.com$/; // Modified regex to enforce specific email format
+            if (!emailPattern.test(email)) {
+                emailError.textContent = "Invalid email format (must be in the form username@gmail.com)";
+                emailError.classList.add("active"); // Show error message for invalid email
+            } else {
+                emailError.classList.remove("active"); // Hide error message if email format is valid
+            }
+        });
+
+        // Password input event listener
+        passwordInput.addEventListener("input", function() {
+            var password = passwordInput.value;
+            var passwordError = document.getElementById("passwordError");
+            
+            passwordError.textContent = ""; // Reset previous error message
+            
+            if (password.length < minLength || password.length > maxLength) {
+                passwordError.textContent = "Password must be between " + minLength + " and " + maxLength + " characters long";
+                passwordError.classList.add("active"); // Show error message
+            } else {
+                passwordError.classList.remove("active"); // Hide error message if password length is valid
+            }
+
+            updatePasswordStrength(password);
+        });
+
+        // Function to update password strength
+        function updatePasswordStrength(password) {
+            var progressBar = document.querySelector(".strength-meter .progress");
+            var strength = calculatePasswordStrength(password);
+            var progress = (strength / 100) * 100;
+
+            progressBar.style.width = progress + "%";
+
+            if (strength < 30) {
+                progressBar.style.backgroundColor = "#ff4d4d"; // Weak
+            } else if (strength < 60) {
+                progressBar.style.backgroundColor = "#ffa64d"; // Medium
+            } else {
+                progressBar.style.backgroundColor = "#4caf50"; // Strong
+            }
+        }
+
+        // Function to calculate password strength
+        function calculatePasswordStrength(password) {
+            var strength = 0;
+            var regexList = [
+                /[A-Z]/, // Uppercase letters
+                /[a-z]/, // Lowercase letters
+                /[0-9]/, // Numbers
+                /[$-/:-?{-~!"^_`\[\]]/ // Special characters
+            ];
+
+            for (var regex of regexList) {
+                if (regex.test(password)) {
+                    strength += 25;
+                }
+            }
+
+            // Bonus strength for longer passwords
+            strength += Math.min(50, 25 * (password.length / 8));
+
+            return Math.min(100, strength);
+        }
+
+        document.getElementById("registrationForm").addEventListener("submit", function(event) {
+            event.preventDefault(); // Prevent form submission
+
+            var username = document.getElementById("username").value;
+            var email = document.getElementById("email").value;
+            var password = document.getElementById("password").value;
+            var confirmPassword = document.getElementById("confirm_password").value;
+
+            // Store registration data in local storage if validation passes
+            if (validateForm(username, email, password, confirmPassword)) {
+                // Show loading spinner
+                document.getElementById("loadingSpinner").style.display = "block";
+
+                var userData = {
+                    username: username,
+                    email: email,
+                    password: password
+                };
+
+                // Get existing users data from local storage or initialize an empty array
+                var existingUsers = JSON.parse(localStorage.getItem("users")) || [];
+
+                // Check if the email is already registered
+                var existingUser = existingUsers.find(function(user) {
+                    return user.email === email;
+                });
+
+                if (existingUser) {
+                    alert("This email is already registered.");
+                    return;
+                }
+
+                // Add the new user to the existing users array
+                existingUsers.push(userData);
+                localStorage.setItem("users", JSON.stringify(existingUsers));
+
+                // Simulate registration process delay (2 seconds)
+                setTimeout(function() {
+                    // Hide loading spinner
+                    document.getElementById("loadingSpinner").style.display = "none";
+
+                    alert("Registration successful.");
+                    window.location.href = "Login.html";
+                }, 2000);
+            }
+        });
+
+        function validateForm(username, email, password, confirmPassword) {
+            var usernameError = document.getElementById("usernameError");
+            var emailError = document.getElementById("emailError");
+            var passwordError = document.getElementById("passwordError");
+            var confirmPasswordError = document.getElementById("confirmPasswordError");
+
+            // Reset previous error messages
+            usernameError.textContent = "";
+            emailError.textContent = "";
+            passwordError.textContent = "";
+            confirmPasswordError.textContent = "";
+
+            // Username validation
+            if (username.trim() === "") {
+                usernameError.textContent = "Username is required";
+                return false;
+            }
+            if (username.length < minUsernameLength || username.length > maxUsernameLength) {
+                usernameError.textContent = "Username must be between " + minUsernameLength + " and " + maxUsernameLength + " characters long";
+                return false;
+            }
+
+            // Email validation
+            var emailPattern = /^[^\s@]+@gmail\.com$/; // Modified regex to enforce specific email format
+            if (!emailPattern.test(email)) {
+                emailError.textContent = "Invalid email format (must be in the form username@gmail.com)";
+                return false;
+            }
+
+            // Password validation
+            if (password.length < minLength || password.length > maxLength) {
+                passwordError.textContent = "Password must be between " + minLength + " and " + maxLength + " characters long";
+                return false;
+            }
+
+            // Confirm password validation
+            if (password !== confirmPassword) {
+                confirmPasswordError.textContent = "Passwords do not match";
+                return false;
+            }
+
+            return true; // Return true if validation passes
+        }
+    </script>
+</body>
+</html>
